@@ -8,5 +8,6 @@ import android.view.View;
 
 public interface ItemClickListener {
 
-    void onFavoritoClick(View view, int posicion);
+    void onItemClick(View view,int posicion);
+    void onFavoritoClick(int posicion);
 }

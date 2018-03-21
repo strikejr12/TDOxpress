@@ -12,14 +12,14 @@ import com.beyondthecode.tdoscharff.tdoxpress.interfaz.ItemClickListener;
  * Created by Computer on 19/03/2018.
  */
 
-public class ContactViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
+public class ContactViewHolder extends RecyclerView.ViewHolder{
 
     public TextView txt_nombre;
     public TextView txt_telefono;
     public ImageView img_contacto;
-    public ImageView icon_favorito;
+    public ImageView img_favorito;
 
-    private ItemClickListener favoritoListener;
+    private ItemClickListener itemEscogido;
 
 
 
@@ -29,22 +29,33 @@ public class ContactViewHolder extends RecyclerView.ViewHolder implements View.O
         txt_nombre = itemView.findViewById(R.id.txt_contact_nombre);
         txt_telefono = itemView.findViewById(R.id.txt_contact_fono);
         img_contacto = itemView.findViewById(R.id.img_contact);
-        icon_favorito = itemView.findViewById(R.id.iv_favorito);
+        img_favorito = itemView.findViewById(R.id.iv_favorito);
 
 
-        icon_favorito.setOnClickListener(this);
+        itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                itemEscogido.onItemClick(view,getAdapterPosition());
+            }
+        });
+
+        img_favorito.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                itemEscogido.onFavoritoClick(getAdapterPosition());
+            }
+        });
 
 
     }
 
-    public void setOnFavoriteListener(ItemClickListener favoritoListener){
-        this.favoritoListener = favoritoListener;
+    public void setItemClicked(ItemClickListener itemEscogido){
+        this.itemEscogido = itemEscogido;
 
     }
 
 
-    @Override
-    public void onClick(View v) {
-        favoritoListener.onFavoritoClick(v,getAdapterPosition());
-    }
+
 }
