@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "1030114368845",
+    "firebase_url": "https://tdoxpress.firebaseio.com",
+    "project_id": "tdoxpress",
+    "storage_bucket": "tdoxpress.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1030114368845:android:4da8904e298fffbd",
+        "android_client_info": {
+          "package_name": "com.beyondthecode.tdoscharff.tdoxpress"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1030114368845-uifn738as7durocqareb5fap8d9iveh8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.beyondthecode.tdoscharff.tdoxpress",
+            "certificate_hash": "0abcfbc56f506971018048c217861ace44f76e51"
+          }
+        },
+        {
+          "client_id": "1030114368845-bjn5sa40e4b6p2vefrn7cblocggdejhh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBQ9m4kP1rSHTN62WX83YqrfVJigFj0sWs"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1030114368845-bjn5sa40e4b6p2vefrn7cblocggdejhh.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
