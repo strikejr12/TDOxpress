@@ -6,19 +6,31 @@ package com.beyondthecode.tdoscharff.tdoxpress.modelo;
 
 public class Contact {
 
+    private String idContacto;
+
     private String nombre;
     private Long telefono;
     private String imagen;
     private String area;
 
-    public Contact(String nombre, Long telefono, String imagen) {
+
+    public Contact(String idContacto, String nombre, Long telefono, String imagen, String area) {
+        this.idContacto = idContacto;
         this.nombre = nombre;
         this.telefono = telefono;
         this.imagen = imagen;
+        this.area = area;
     }
 
-
     public Contact() {
+    }
+
+    public String getIdContacto() {
+        return idContacto;
+    }
+
+    public void setIdContacto(String idContacto) {
+        this.idContacto = idContacto;
     }
 
     public String getNombre() {

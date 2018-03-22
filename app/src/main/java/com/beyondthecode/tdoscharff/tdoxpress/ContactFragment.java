@@ -16,10 +16,14 @@ import com.beyondthecode.tdoscharff.tdoxpress.interfaz.ItemClickListener;
 import com.beyondthecode.tdoscharff.tdoxpress.modelo.Contact;
 import com.beyondthecode.tdoscharff.tdoxpress.view.ContactViewHolder;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -60,6 +64,30 @@ public class ContactFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        DatabaseReference mDatabaseReference;
+        mDatabaseReference = FirebaseDatabase.getInstance().getReference();
+        mDatabaseReference.child("Contactos").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+
+                final List<String> contactos = new ArrayList<>();
+                final List<String> ids = new ArrayList<>();
+
+                for(DataSnapshot contactoSnapShot : dataSnapshot.getChildren()){
+
+
+                }
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+
 
 
         //cargarContacto();
@@ -104,8 +132,6 @@ public class ContactFragment extends Fragment {
 
 
                         if (!isColored){
-
-
 
                             viewHolder.img_favorito.setImageResource(R.drawable.ic_favorite_full_scharffcolor_24dp);
                             isColored=true;
