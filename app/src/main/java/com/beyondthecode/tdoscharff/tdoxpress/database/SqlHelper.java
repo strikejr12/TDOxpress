@@ -7,6 +7,7 @@ import android.database.DatabaseErrorHandler;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
+import android.util.Log;
 
 import com.beyondthecode.tdoscharff.tdoxpress.modelo.Contact;
 
@@ -21,12 +22,14 @@ public class SqlHelper extends SQLiteOpenHelper {
 
     private static final String NOMBRE_BD = "TDOxpressSQLite";
     private static final int    VERSION_BD = 1;
+
     private static final String TABLA_CONTACTO = "Contacto";
     private static final String CAMPO_CODIGO = "idContacto";
     private static final String CAMPO_NOMBRE = "nombre";
     private static final String CAMPO_TELEFONO = "telefono";
     private static final String CAMPO_AREA = "area";
     private static final String CAMPO_IMAGEN = "imagen";
+    private static final String CAMPO_SEDE = "sede";
 
     private static final String TAG = SqlHelper.class.getName();
 
@@ -38,12 +41,13 @@ public class SqlHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
 
         String sqlCreate =
-                "CREATE TABLE " + TABLA_CONTACTO +
-                        "("+CAMPO_CODIGO + " STRING PRIMARY KEY,"+
+                "CREATE TABLE IF NOT EXISTS " + TABLA_CONTACTO +
+                        "("+CAMPO_CODIGO + " LONG PRIMARY KEY,"+
                         CAMPO_NOMBRE + " TEXT," +
                         CAMPO_TELEFONO + " LONG,"+
                         CAMPO_AREA + " TEXT," +
-                        CAMPO_IMAGEN + " TEXT)";
+                        CAMPO_IMAGEN + " TEXT," +
+                        CAMPO_SEDE + " TEXT)";
 
         db.execSQL(sqlCreate);
     }
@@ -61,6 +65,7 @@ public class SqlHelper extends SQLiteOpenHelper {
         contentValues.put(CAMPO_TELEFONO, contacto.getTelefono());
         contentValues.put(CAMPO_AREA, contacto.getArea());
         contentValues.put(CAMPO_IMAGEN, contacto.getImagen());
+        contentValues.put(CAMPO_SEDE, contacto.getSede());
 
         SQLiteDatabase db = getWritableDatabase();
         db.insert(TABLA_CONTACTO,null,contentValues);
@@ -73,8 +78,10 @@ public class SqlHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = getReadableDatabase();
         SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
 
+
+
         String[] sqlSelect = {CAMPO_CODIGO,CAMPO_NOMBRE,
-                CAMPO_TELEFONO,CAMPO_AREA,CAMPO_IMAGEN};
+                CAMPO_TELEFONO,CAMPO_AREA,CAMPO_IMAGEN,CAMPO_SEDE};
 
         String sqlTable = TABLA_CONTACTO;
 
@@ -88,26 +95,60 @@ public class SqlHelper extends SQLiteOpenHelper {
             do {
                 listaContacto.add(
                         new Contact(
-                                cursor.getString(cursor.getColumnIndex(CAMPO_CODIGO)),
+                                cursor.getLong(cursor.getColumnIndex(CAMPO_CODIGO)),
                                 cursor.getString(cursor.getColumnIndex(CAMPO_NOMBRE)),
                                 cursor.getLong(cursor.getColumnIndex(CAMPO_TELEFONO)),
                                 cursor.getString(cursor.getColumnIndex(CAMPO_AREA)),
-                                cursor.getString(cursor.getColumnIndex(CAMPO_IMAGEN))
+                                cursor.getString(cursor.getColumnIndex(CAMPO_IMAGEN)),
+                                cursor.getString(cursor.getColumnIndex(CAMPO_SEDE))
 
                         ));
             }while (
-                        cursor.moveToNext()
-                        );
+                    cursor.moveToNext()
+                    );
 
         }
 
-            cursor.close();
-            db.close();
+        cursor.close();
+        db.close();
 
         return listaContacto;
 
     }
 
-}
+    public boolean existeContacto(Long idContacto){
 
+        SQLiteDatabase db = getReadableDatabase();
+        String selectString =
+
+                "SELECT * FROM "
+                        + TABLA_CONTACTO +
+                        " WHERE "+
+                        CAMPO_CODIGO +
+                        " =?";
+        Cursor cursor = db.rawQuery(selectString,new String[]{String.valueOf(idContacto)});
+
+        boolean xtienecontacto = false;
+
+        if(cursor.moveToFirst()){
+            xtienecontacto = true;
+
+           // int count = 0;
+            int count = 1;
+
+            /*
+            while (cursor.moveToNext()){
+                count++;
+            }*/
+
+            Log.d(TAG,String.format("%d registro encontrado",count));
+        }
+
+        cursor.close();
+        db.close();
+
+        return xtienecontacto;
+    }
+
+}
 
