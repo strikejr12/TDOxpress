@@ -1,6 +1,7 @@
 package com.beyondthecode.tdoscharff.tdoxpress;
 
 
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
@@ -17,6 +18,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.beyondthecode.tdoscharff.tdoxpress.adapters.ContactRecyclerViewAdapter;
 import com.beyondthecode.tdoscharff.tdoxpress.database.SqlHelper;
 import com.beyondthecode.tdoscharff.tdoxpress.interfaz.ItemClickListener;
 import com.beyondthecode.tdoscharff.tdoxpress.modelo.Contact;
@@ -39,11 +41,26 @@ import java.util.List;
 
 public class ContactFragment extends Fragment {
 
+    private static final String TAG = ContactFragment.class.getName();
+
     View v;
     private RecyclerView mRecyclerView;
     private List<Contact> lstContacto;
 
+    //aca
+    ArrayList<Contact>  mContactArrayList;
+    Contact mContact;
 
+    Long idContacto;
+    String nombre;
+    Long telefono;
+    String area;
+    String imagen;
+    String sede;
+
+
+
+    SqlHelper mSqlHelper;
 
 
     public ContactFragment() {
@@ -55,14 +72,15 @@ public class ContactFragment extends Fragment {
 
         v = inflater.inflate(R.layout.fragment_contact, container, false);
 
-        mRecyclerView = v.findViewById(R.id.rcv_contacto);
-        //RecyclerViewAdapter mRecyclerViewAdapter = new RecyclerViewAdapter(getContext(),lstContacto);
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity().getApplicationContext()));
-        //  mRecyclerView.setAdapter(mRecyclerViewAdapter);
+        mSqlHelper = new SqlHelper(getActivity());
 
+        cargarContactRecyclerViewxSQLite();
 
-        mRecyclerView.addItemDecoration(new DividerItemDecoration(getActivity(), LinearLayoutManager.VERTICAL));
-        cargarContacto(v);
+        /* quitar comentario si se desea cargar datos por Firebase
+        inicializarRecyclerViewxFirebase();
+        cargarContactoRecyclerViewxFireBase();
+        */
+
 
         return v;
     }
@@ -72,9 +90,47 @@ public class ContactFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        Log.d(TAG,"en metodo onCreate");
+        obtenerContactosDeFirebaseYgrabarEnLocal();
+
+
+
+
+        //cargarContacto();
+
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        Log.d(TAG,"en metodo onPause");
+        obtenerContactosDeFirebaseYgrabarEnLocal();
+
+
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Log.d(TAG,"en metodo onResume");
+        cargarContactRecyclerViewxSQLite();
+
+
+
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.d(TAG,"en metodo onDestroy");
+        mSqlHelper.close();
+    }
+
+    private void obtenerContactosDeFirebaseYgrabarEnLocal(){
+
         DatabaseReference mDatabaseReference;
         mDatabaseReference = FirebaseDatabase.getInstance().getReference();
-        mDatabaseReference.child("Contactos").addListenerForSingleValueEvent(new ValueEventListener() {
+        mDatabaseReference.child("Contactos").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
 
@@ -82,47 +138,36 @@ public class ContactFragment extends Fragment {
 
                 Iterable<DataSnapshot> contactChildren =  dataSnapshot.getChildren();
 
-                ArrayList<Contact>  mContactArrayList= new ArrayList<>();
+                mContactArrayList = new ArrayList<>();
 
                 for(DataSnapshot mContactDataSnapShot : contactChildren){
 
-                    Contact mContact =  mContactDataSnapShot.getValue(Contact.class);
+                    mContact =  mContactDataSnapShot.getValue(Contact.class);
                     Log.d("contact en Firebase:: ", mContact.getIdContacto()+" "+mContact.getNombre()+" "+mContact.getTelefono()+" "+mContact.getArea());
                     mContactArrayList.add(mContact);
 
 
                     //se obtiene cada nodo del padre contacto
-                    Long idContacto = Long.parseLong(mContactDataSnapShot.getKey());
+                    idContacto = Long.parseLong(mContactDataSnapShot.getKey());
 
-                    String nombre = mContactDataSnapShot.child("nombre").getValue(String.class);
-                    Long telefono = mContactDataSnapShot.child("telefono").getValue(Long.class);
-                    String area = mContactDataSnapShot.child("area").getValue(String.class);
-                    String imagen = mContactDataSnapShot.child("imagen").getValue(String.class);
-                    String sede = mContactDataSnapShot.child("sede").getValue(String.class);
-
-
-
-                    //se graba localmente en sqlite para luego mostrar cuando esta offline
-                    SqlHelper mSqlHelper = new SqlHelper(getActivity());
-
+                    nombre = mContactDataSnapShot.child("nombre").getValue(String.class);
+                    telefono = mContactDataSnapShot.child("telefono").getValue(Long.class);
+                    area = mContactDataSnapShot.child("area").getValue(String.class);
+                    imagen = mContactDataSnapShot.child("imagen").getValue(String.class);
+                    sede = mContactDataSnapShot.child("sede").getValue(String.class);
 
 
                     if(!mSqlHelper.existeContacto(idContacto)){
 
-                        mSqlHelper.agregarContacto(
-                                new Contact(
-                                        idContacto,
-                                        nombre,
-                                        telefono,
-                                        area,
-                                        imagen,
-                                        sede
-                                ),getActivity()
-                        );
 
-                        Toast.makeText(getActivity(), "Se agregó contacto de codigo "+idContacto, Toast.LENGTH_SHORT).show();
+
+                        agregarContactoBdLocal();
+
+                       // Toast.makeText(getActivity(), "Se agregó contacto de codigo "+idContacto, Toast.LENGTH_SHORT).show();
                     }else {
-                        Toast.makeText(getActivity(), "existe contacto de codigo "+idContacto, Toast.LENGTH_SHORT).show();
+
+                        actualizarContactoBdLocal();
+                       // Toast.makeText(getActivity(), "existe contacto de codigo "+idContacto, Toast.LENGTH_SHORT).show();
                     }
 
 
@@ -130,9 +175,6 @@ public class ContactFragment extends Fragment {
 
 
                 }
-
-
-
 
             }
 
@@ -142,12 +184,85 @@ public class ContactFragment extends Fragment {
             }
         });
 
+    }
 
-        //cargarContacto();
+    private void actualizarContactoBdLocal(){
+
+
+        mSqlHelper.actualizarCamposContact(
+                idContacto,
+                nombre,
+                telefono,
+                area,
+                imagen,
+                sede
+        );
 
     }
 
-    void cargarContacto(View v) {
+    private void agregarContactoBdLocal() {
+
+        //se graba localmente en sqlite para luego mostrar cuando esta offline
+
+
+
+            mSqlHelper.agregarContacto(
+                    new Contact(
+                            idContacto,
+                            nombre,
+                            telefono,
+                            area,
+                            imagen,
+                            sede
+                    ),getActivity()
+            );
+
+    }
+
+    private void cargarContactRecyclerViewxSQLite(){
+
+        mRecyclerView = v.findViewById(R.id.rcv_contacto);
+        //RecyclerViewAdapter mRecyclerViewAdapter = new RecyclerViewAdapter(getContext(),lstContacto);
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity().getApplicationContext()));
+        //  mRecyclerView.setAdapter(mRecyclerViewAdapter);
+
+
+        mRecyclerView.addItemDecoration(new DividerItemDecoration(getActivity(), LinearLayoutManager.VERTICAL));
+
+
+        ContactRecyclerViewAdapter mContactRecyclerViewAdapter;
+
+        //se llama el metood getLStcontacto para setearlo al adapter
+        mContactRecyclerViewAdapter = new ContactRecyclerViewAdapter(getActivity(),getLstContacto());
+
+        mRecyclerView.setAdapter(mContactRecyclerViewAdapter);
+    }
+
+    /*Se obtiene lista de contactos de la bd local*/
+    private List<Contact> getLstContacto(){
+
+        List<Contact> mContactList;
+
+
+
+
+        mContactList = mSqlHelper.obtenerContactos();
+
+        return mContactList;
+    }
+
+    private void inicializarRecyclerViewxFirebase(){
+
+        mRecyclerView = v.findViewById(R.id.rcv_contacto);
+        //RecyclerViewAdapter mRecyclerViewAdapter = new RecyclerViewAdapter(getContext(),lstContacto);
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity().getApplicationContext()));
+        //  mRecyclerView.setAdapter(mRecyclerViewAdapter);
+
+
+        mRecyclerView.addItemDecoration(new DividerItemDecoration(getActivity(), LinearLayoutManager.VERTICAL));
+    }
+
+    private void cargarContactoRecyclerViewxFireBase() {
 
         DatabaseReference contacto;
         FirebaseDatabase database;
@@ -169,7 +284,7 @@ public class ContactFragment extends Fragment {
                /* Picasso.with(getActivity().getBaseContext()).load(contacto.getImagen())
                         .into(viewHolder.img_contacto);   */
 
-                Picasso.with(getActivity()).load(contacto.getImagen())
+                Picasso.with(getActivity()).load(contacto.getImagen()).resize(600,200).centerInside()
                         .into(viewHolder.img_contacto, new Callback() {
                             @Override
                             public void onSuccess() {

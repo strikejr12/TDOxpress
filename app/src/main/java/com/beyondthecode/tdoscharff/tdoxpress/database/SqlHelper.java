@@ -150,5 +150,75 @@ public class SqlHelper extends SQLiteOpenHelper {
         return xtienecontacto;
     }
 
+    public void actualizarCamposContact(Long xidcontacto, String xnombre, Long xtelefono, String xarea, String ximagen, String xsede){
+
+        SQLiteDatabase db = getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(CAMPO_NOMBRE,xnombre);
+        values.put(CAMPO_TELEFONO,xtelefono);
+        values.put(CAMPO_AREA,xarea);
+        values.put(CAMPO_IMAGEN,ximagen);
+        values.put(CAMPO_SEDE,xsede);
+
+        String selection = CAMPO_CODIGO + " = "+xidcontacto;
+
+        db.update(TABLA_CONTACTO,values,selection,null);
+        db.close();
+
+    }
+
+
+    public boolean existeCambiosEnCamposContacto(Long xidcontacto, String xnombre, Long xtelefono, String xarea, String ximagen, String xsede){
+
+        SQLiteDatabase db = getReadableDatabase();
+        String selectString =
+
+                "SELECT * FROM "
+                        + TABLA_CONTACTO +
+                        " WHERE "+
+                        CAMPO_CODIGO + " =? "+
+                        "AND (" +
+                        CAMPO_NOMBRE + " !=? "+
+                        "OR "+
+                        CAMPO_TELEFONO + " !=? "+
+                        "OR "+
+                        CAMPO_AREA + " !=? "+
+                        "OR "+
+                        CAMPO_IMAGEN + " !=? "+
+                        "OR "+
+                        CAMPO_SEDE + " !=? )";
+
+        Cursor cursor = db.rawQuery(selectString,new String[]
+                                                {String.valueOf(xidcontacto),
+                                                xnombre,
+                                                String.valueOf(xtelefono),
+                                                xarea,
+                                                ximagen,
+                                                xsede}
+                                                );
+
+        boolean existeCambiosEnCampos = false;
+
+        if(cursor.moveToFirst()){
+            existeCambiosEnCampos = true;
+
+            int count = 0;
+            //int count = 1;
+
+
+            while (cursor.moveToNext()){
+                count++;
+            }
+
+            Log.d(TAG,String.format("%d registro encontrado",count));
+        }
+
+        cursor.close();
+
+        return existeCambiosEnCampos;
+
+    }
+
 }
 
